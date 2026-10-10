@@ -33,7 +33,9 @@ const rows = [
 ['tor',141,'TOR','Toronto Blue Jays','Blue Jays','Rogers Centre','Toronto','ON',-79.3894,43.6414,'AL','East',1989,39150,'Artificial turf','#134A8E','#E8291C','Poutine'],
 ['wsh',120,'WSH','Washington Nationals','Nationals','Nationals Park','Washington','DC',-77.0074,38.873,'NL','East',2008,41339,'Natural grass','#AB0003','#14225A','Ben\'s Chili Bowl Half-Smoke'],
 ];
+const roofs = { ari: 'retractable', hou: 'retractable', mia: 'retractable', mil: 'retractable', sea: 'retractable', tex: 'retractable', tor: 'retractable', tb: 'dome' };
+const zoneByState = { NY: 'America/New_York', PA: 'America/New_York', MA: 'America/New_York', MD: 'America/New_York', DC: 'America/New_York', GA: 'America/New_York', FL: 'America/New_York', OH: 'America/New_York', MI: 'America/New_York', ON: 'America/Toronto', IL: 'America/Chicago', MO: 'America/Chicago', WI: 'America/Chicago', MN: 'America/Chicago', TX: 'America/Chicago', CO: 'America/Denver', AZ: 'America/Phoenix', CA: 'America/Los_Angeles', WA: 'America/Los_Angeles' };
 const keys = ['id','mlbId','abbr','franchise','teamName','venue','city','state','lng','lat','league','division','openedYear','capacity','turfType','primaryColor','secondaryColor','localClassicConcession'];
-const out = rows.map((r) => { const o = Object.fromEntries(keys.map((k, i) => [k, r[i]])); const { lng, lat, ...rest } = o; const { id, mlbId, abbr, franchise, teamName, venue, city, state, ...tail } = rest; return { id, mlbId, abbr, franchise, teamName, venue, city, state, coordinates: [lng, lat], ...tail }; });
+const out = rows.map((r) => { const o = Object.fromEntries(keys.map((k, i) => [k, r[i]])); const { lng, lat, ...rest } = o; const { id, mlbId, abbr, franchise, teamName, venue, city, state, ...tail } = rest; return { id, mlbId, abbr, franchise, teamName, venue, city, state, coordinates: [lng, lat], ...tail, roof: roofs[id] ?? 'open', timeZone: zoneByState[state] }; });
 writeFileSync(new URL('../data/ballparks.json', import.meta.url), JSON.stringify(out, null, 2) + '\n');
 console.log(out.length);

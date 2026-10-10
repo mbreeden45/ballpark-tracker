@@ -57,6 +57,12 @@ export function playBatCrack(): void {
   knock.stop(now + 0.06);
 }
 
+export function hapticLight(): void {
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    navigator.vibrate(12);
+  }
+}
+
 export function hapticTap(): void {
   if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
     navigator.vibrate([15, 30, 15]);
@@ -65,7 +71,7 @@ export function hapticTap(): void {
 
 export async function fireConfetti(big: boolean): Promise<void> {
   const confetti = (await import('canvas-confetti')).default;
-  const colors = ['#C0362C', '#E5A823', '#1E4D2B', '#FBF8F1'];
+  const colors = ['#BF0D3E', '#041E42', '#FFFFFF', '#A2AAAD'];
   if (!big) {
     confetti({ particleCount: 140, spread: 80, origin: { y: 0.65 }, colors, zIndex: 100 });
     return;

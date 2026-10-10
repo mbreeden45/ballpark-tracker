@@ -112,15 +112,15 @@ export function SocialShareModal() {
   if (!open) return null;
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Share your passport" className="fixed inset-0 z-50 flex flex-col bg-ballpark/95 backdrop-blur-sm">
-      <div className="flex items-center justify-between px-4 py-3 text-cream">
-        <h2 className="font-display text-lg">Share Studio</h2>
+    <div role="dialog" aria-modal="true" aria-label="Share your passport" className="fixed inset-0 z-50 flex flex-col bg-navy/95 backdrop-blur-sm">
+      <div className="flex items-center justify-between px-4 py-3 text-white">
+        <h2 className="font-display text-2xl font-bold">Share Studio</h2>
         <button type="button" onClick={() => setOpen(false)} aria-label="Close share studio" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10">
           <X size={22} />
         </button>
       </div>
 
-      <div className="mx-auto flex w-full max-w-sm gap-1 rounded-full bg-white/10 p-1 text-cream">
+      <div className="mx-auto flex w-full max-w-sm gap-1 rounded-full bg-white/10 p-1 text-white">
         {([
           ['story', '9:16 Story'],
           ['square', '1:1 Tier List'],
@@ -130,7 +130,7 @@ export function SocialShareModal() {
             type="button"
             onClick={() => setFormat(id)}
             aria-pressed={format === id}
-            className={cn('min-h-[40px] flex-1 rounded-full text-xs font-bold uppercase tracking-wide transition', format === id ? 'bg-gold text-ballpark' : 'text-cream/80')}
+            className={cn('min-h-[40px] flex-1 rounded-full text-xs font-bold uppercase tracking-wide transition', format === id ? 'bg-white text-navy' : 'text-white/80')}
           >
             {label}
           </button>
@@ -138,7 +138,7 @@ export function SocialShareModal() {
       </div>
 
       <div ref={stageRef} className="relative mx-auto my-3 flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden px-4">
-        <div style={{ width: w * scale, height: h * scale }} className="shrink-0 overflow-hidden rounded-lg shadow-lift">
+        <div style={{ width: w * scale, height: h * scale }} className="shrink-0 overflow-hidden rounded-lg shadow-pop">
           <div style={{ width: w, height: h, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
             <ShareCard ref={cardRef} format={format} stats={stats} entries={entries} />
           </div>
@@ -146,11 +146,11 @@ export function SocialShareModal() {
       </div>
 
       <div className="mx-auto w-full max-w-sm space-y-2 px-4 pb-[max(env(safe-area-inset-bottom),16px)]">
-        {message && <p className="text-center text-sm text-gold" aria-live="polite">{message}</p>}
+        {message && <p className="text-center text-sm text-white" aria-live="polite">{message}</p>}
         <button type="button" onClick={share} disabled={busy} className="btn-primary w-full">
           <Share2 size={18} /> {busy ? 'Rendering…' : 'Share Image'}
         </button>
-        <button type="button" onClick={save} disabled={busy} className="btn-ghost w-full !border-cream/30 !bg-transparent !text-cream">
+        <button type="button" onClick={save} disabled={busy} className="btn-ghost w-full !border-white/30 !bg-transparent !text-white">
           <Download size={18} /> Save PNG
         </button>
       </div>

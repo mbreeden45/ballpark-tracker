@@ -1,28 +1,35 @@
 import type { Metadata, Viewport } from 'next';
-import { Alfa_Slab_One, Libre_Franklin, Special_Elite, Share_Tech_Mono } from 'next/font/google';
+import { Barlow_Condensed, Inter } from 'next/font/google';
 import './globals.css';
+import { AppHeader } from '@/components/AppHeader';
+import { StoreHydrator } from '@/components/StoreHydrator';
 
-const display = Alfa_Slab_One({ weight: '400', subsets: ['latin'], variable: '--font-display', display: 'swap' });
-const body = Libre_Franklin({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
-const typewriter = Special_Elite({ weight: '400', subsets: ['latin'], variable: '--font-typewriter', display: 'swap' });
-const scoreboard = Share_Tech_Mono({ weight: '400', subsets: ['latin'], variable: '--font-scoreboard', display: 'swap' });
+const display = Barlow_Condensed({ weight: ['500', '600', '700'], subsets: ['latin'], variable: '--font-display', display: 'swap' });
+const body = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Ballpark Passport — MLB Field Log',
-  description: 'Track every MLB ballpark you have visited: stamp your passport, rate the five tools, and share your tier list.',
+  title: 'Ballpark Passport — Track and plan your MLB ballpark trips',
+  description: 'Check off every MLB ballpark you have visited, rank them, and plan a realistic road trip around the schedule.',
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#1E4D2B',
+  themeColor: '#041E42',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${typewriter.variable} ${scoreboard.variable}`}>
-      <body className="font-body antialiased">{children}</body>
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
+      <body className="font-body antialiased">
+        <StoreHydrator />
+        <AppHeader />
+        {children}
+        <footer className="mx-auto max-w-[1400px] px-4 pb-8 pt-2 text-center text-xs text-muted">
+          Fan-made project. Not affiliated with or endorsed by Major League Baseball or any club. Schedule and box score data from the public MLB Stats API.
+        </footer>
+      </body>
     </html>
   );
 }

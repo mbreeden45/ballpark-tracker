@@ -13,10 +13,10 @@ interface Props {
 
 export function BaseballRating({ label, hint, value, onChange, size = 34 }: Props) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1.5">
+    <div className="flex items-center justify-between gap-3 py-2">
       <div className="min-w-0">
-        <div className="font-bold leading-tight text-ballpark">{label}</div>
-        {hint && <div className="text-xs leading-tight text-ballpark/55">{hint}</div>}
+        <div className="text-sm font-semibold leading-tight text-navy">{label}</div>
+        {hint && <div className="text-xs leading-tight text-muted">{hint}</div>}
       </div>
       <div className="flex shrink-0 items-center" role="radiogroup" aria-label={`${label} rating`}>
         {[1, 2, 3, 4, 5].map((n) => (
@@ -28,10 +28,7 @@ export function BaseballRating({ label, hint, value, onChange, size = 34 }: Prop
             aria-label={`${n} of 5`}
             disabled={!onChange}
             onClick={() => onChange?.(value === n ? 0 : n)}
-            className={cn(
-              'flex h-10 w-[34px] items-center justify-center rounded-full transition active:scale-90',
-              n <= value ? 'drop-shadow-[0_2px_2px_rgba(192,54,44,.35)]' : 'opacity-80',
-            )}
+            className={cn('flex h-10 w-[34px] items-center justify-center rounded-full transition active:scale-90', n > value && 'opacity-70')}
           >
             <BaseballIcon size={size - 8} filled={n <= value} />
           </button>

@@ -2,8 +2,9 @@ export type League = 'AL' | 'NL';
 export type Division = 'East' | 'Central' | 'West';
 export type ParkStatus = 'unvisited' | 'wishlist' | 'visited';
 export type Tier = 'S' | 'A' | 'B' | 'C' | 'D';
-export type MapMode = 'vintage' | 'satellite' | 'corridor';
-export type ListMode = 'binder' | 'scoreboard' | 'passport' | 'tierlist';
+export type MapMode = 'atlas' | 'roadtrip';
+export type ListMode = 'checklist' | 'map' | 'collection' | 'visits' | 'rankings';
+export type RoofType = 'open' | 'retractable' | 'dome';
 
 export interface Ballpark {
   id: string;
@@ -23,6 +24,9 @@ export interface Ballpark {
   primaryColor: string;
   secondaryColor: string;
   localClassicConcession: string;
+  roof: RoofType;
+  /** IANA time zone of the ballpark. */
+  timeZone: string;
 }
 
 export interface Ratings {

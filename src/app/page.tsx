@@ -1,5 +1,5 @@
-import { AppShell } from '@/components/AppShell';
+import { PassportApp } from '@/components/passport/PassportApp';
 
 export default function Page() {
-  return <AppShell />;
+  return <PassportApp />;
 }

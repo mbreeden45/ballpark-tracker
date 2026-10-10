@@ -19,7 +19,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#A71930",
     "secondaryColor": "#E3D4AD",
-    "localClassicConcession": "Churro Dog"
+    "localClassicConcession": "Churro Dog",
+    "roof": "retractable",
+    "timeZone": "America/Phoenix"
   },
   {
     "id": "atl",
@@ -41,7 +43,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#CE1141",
     "secondaryColor": "#13274F",
-    "localClassicConcession": "Fried Chicken Sandwich"
+    "localClassicConcession": "Fried Chicken Sandwich",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "bal",
@@ -63,7 +67,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#DF4601",
     "secondaryColor": "#000000",
-    "localClassicConcession": "Boog's Pit Beef Sandwich"
+    "localClassicConcession": "Boog's Pit Beef Sandwich",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "bos",
@@ -85,7 +91,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#BD3039",
     "secondaryColor": "#0C2340",
-    "localClassicConcession": "Fenway Frank"
+    "localClassicConcession": "Fenway Frank",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "chc",
@@ -107,7 +115,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#0E3386",
     "secondaryColor": "#CC3433",
-    "localClassicConcession": "Chicago-Style Hot Dog"
+    "localClassicConcession": "Chicago-Style Hot Dog",
+    "roof": "open",
+    "timeZone": "America/Chicago"
   },
   {
     "id": "cws",
@@ -129,7 +139,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#27251F",
     "secondaryColor": "#C4CED4",
-    "localClassicConcession": "Polish Sausage with Grilled Onions"
+    "localClassicConcession": "Polish Sausage with Grilled Onions",
+    "roof": "open",
+    "timeZone": "America/Chicago"
   },
   {
     "id": "cin",
@@ -151,7 +163,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#C6011F",
     "secondaryColor": "#000000",
-    "localClassicConcession": "Skyline Chili Cheese Coney"
+    "localClassicConcession": "Skyline Chili Cheese Coney",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "cle",
@@ -173,7 +187,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#E31937",
     "secondaryColor": "#0C2340",
-    "localClassicConcession": "Bratwurst with Stadium Mustard"
+    "localClassicConcession": "Bratwurst with Stadium Mustard",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "col",
@@ -195,7 +211,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#33006F",
     "secondaryColor": "#C4CED4",
-    "localClassicConcession": "Rocky Mountain Oysters"
+    "localClassicConcession": "Rocky Mountain Oysters",
+    "roof": "open",
+    "timeZone": "America/Denver"
   },
   {
     "id": "det",
@@ -217,7 +235,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#0C2340",
     "secondaryColor": "#FA4616",
-    "localClassicConcession": "Detroit Coney Dog"
+    "localClassicConcession": "Detroit Coney Dog",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "hou",
@@ -239,7 +259,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#002D62",
     "secondaryColor": "#EB6E1F",
-    "localClassicConcession": "Texas Brisket Sandwich"
+    "localClassicConcession": "Texas Brisket Sandwich",
+    "roof": "retractable",
+    "timeZone": "America/Chicago"
   },
   {
     "id": "kc",
@@ -261,7 +283,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#004687",
     "secondaryColor": "#BD9B60",
-    "localClassicConcession": "Burnt Ends Sandwich"
+    "localClassicConcession": "Burnt Ends Sandwich",
+    "roof": "open",
+    "timeZone": "America/Chicago"
   },
   {
     "id": "laa",
@@ -283,7 +307,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#BA0021",
     "secondaryColor": "#003263",
-    "localClassicConcession": "Helmet Nachos"
+    "localClassicConcession": "Helmet Nachos",
+    "roof": "open",
+    "timeZone": "America/Los_Angeles"
   },
   {
     "id": "lad",
@@ -305,7 +331,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#005A9C",
     "secondaryColor": "#EF3E42",
-    "localClassicConcession": "Dodger Dog"
+    "localClassicConcession": "Dodger Dog",
+    "roof": "open",
+    "timeZone": "America/Los_Angeles"
   },
   {
     "id": "mia",
@@ -327,7 +355,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#00A3E0",
     "secondaryColor": "#EF3340",
-    "localClassicConcession": "Cuban Sandwich"
+    "localClassicConcession": "Cuban Sandwich",
+    "roof": "retractable",
+    "timeZone": "America/New_York"
   },
   {
     "id": "mil",
@@ -349,7 +379,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#12284B",
     "secondaryColor": "#FFC52F",
-    "localClassicConcession": "Bratwurst with Secret Stadium Sauce"
+    "localClassicConcession": "Bratwurst with Secret Stadium Sauce",
+    "roof": "retractable",
+    "timeZone": "America/Chicago"
   },
   {
     "id": "min",
@@ -371,7 +403,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#002B5C",
     "secondaryColor": "#D31145",
-    "localClassicConcession": "Walleye Cakes"
+    "localClassicConcession": "Walleye Cakes",
+    "roof": "open",
+    "timeZone": "America/Chicago"
   },
   {
     "id": "nym",
@@ -393,7 +427,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#002D72",
     "secondaryColor": "#FF5910",
-    "localClassicConcession": "Pat LaFrieda Steak Sandwich"
+    "localClassicConcession": "Pat LaFrieda Steak Sandwich",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "nyy",
@@ -415,7 +451,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#003087",
     "secondaryColor": "#E4002C",
-    "localClassicConcession": "Lobel's Steak Sandwich"
+    "localClassicConcession": "Lobel's Steak Sandwich",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "ath",
@@ -437,7 +475,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#003831",
     "secondaryColor": "#EFB21E",
-    "localClassicConcession": "Farm-to-Fork Tri-Tip Sandwich"
+    "localClassicConcession": "Farm-to-Fork Tri-Tip Sandwich",
+    "roof": "open",
+    "timeZone": "America/Los_Angeles"
   },
   {
     "id": "phi",
@@ -459,7 +499,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#E81828",
     "secondaryColor": "#002D72",
-    "localClassicConcession": "Philly Cheesesteak"
+    "localClassicConcession": "Philly Cheesesteak",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "pit",
@@ -481,7 +523,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#FDB827",
     "secondaryColor": "#27251F",
-    "localClassicConcession": "Primanti Bros. Sandwich"
+    "localClassicConcession": "Primanti Bros. Sandwich",
+    "roof": "open",
+    "timeZone": "America/New_York"
   },
   {
     "id": "sd",
@@ -503,7 +547,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#2F241D",
     "secondaryColor": "#FFC425",
-    "localClassicConcession": "Baja Fish Tacos"
+    "localClassicConcession": "Baja Fish Tacos",
+    "roof": "open",
+    "timeZone": "America/Los_Angeles"
   },
   {
     "id": "sf",
@@ -525,7 +571,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#FD5A1E",
     "secondaryColor": "#27251F",
-    "localClassicConcession": "Garlic Fries"
+    "localClassicConcession": "Garlic Fries",
+    "roof": "open",
+    "timeZone": "America/Los_Angeles"
   },
   {
     "id": "sea",
@@ -547,7 +595,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#0C2C56",
     "secondaryColor": "#005C5C",
-    "localClassicConcession": "Dungeness Crab Roll"
+    "localClassicConcession": "Dungeness Crab Roll",
+    "roof": "retractable",
+    "timeZone": "America/Los_Angeles"
   },
   {
     "id": "stl",
@@ -569,7 +619,9 @@
     "turfType": "Natural grass",
     "primaryColor": "#C41E3A",
     "secondaryColor": "#0C2340",
-    "localClassicConcession": "Toasted Ravioli"
+    "localClassicConcession": "Toasted Ravioli",
+    "roof": "open",
+    "timeZone": "America/Chicago"
   },
   {
     "id": "tb",
@@ -591,7 +643,9 @@
     "turfType": "Artificial turf",
     "primaryColor": "#092C5C",
     "secondaryColor": "#8FBCE6",
-    "localClassicConcession": "Deviled Crab"
+    "localClassicConcession": "Deviled Crab",
+    "roof": "dome",
+    "timeZone": "America/New_York"
   },
   {
     "id": "tex",
@@ -613,7 +667,9 @@
     "turfType": "Artificial turf",
     "primaryColor": "#003278",
     "secondaryColor": "#C0111F",
-    "localClassicConcession": "Boomstick Footlong Corn Dog"
+    "localClassicConcession": "Boomstick Footlong Corn Dog",
+    "roof": "retractable",
+    "timeZone": "America/Chicago"
   },
   {
     "id": "tor",
@@ -635,7 +691,9 @@
     "turfType": "Artificial turf",
     "primaryColor": "#134A8E",
     "secondaryColor": "#E8291C",
-    "localClassicConcession": "Poutine"
+    "localClassicConcession": "Poutine",
+    "roof": "retractable",
+    "timeZone": "America/Toronto"
   },
   {
     "id": "wsh",
@@ -657,6 +715,8 @@
     "turfType": "Natural grass",
     "primaryColor": "#AB0003",
     "secondaryColor": "#14225A",
-    "localClassicConcession": "Ben's Chili Bowl Half-Smoke"
+    "localClassicConcession": "Ben's Chili Bowl Half-Smoke",
+    "roof": "open",
+    "timeZone": "America/New_York"
   }
 ]

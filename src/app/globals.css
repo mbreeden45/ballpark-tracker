@@ -2,16 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --paper: #fbf8f1;
-  --ink: #1e2022;
-}
-
 html,
 body {
   min-height: 100dvh;
-  background-color: var(--paper);
-  color: var(--ink);
+  background-color: #f4f6f9;
+  color: #041e42;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
   text-size-adjust: 100%;
@@ -19,44 +14,33 @@ body {
 
 body {
   font-family: var(--font-body), system-ui, sans-serif;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .42  0 0 0 0 .25  0 0 0 .09 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
 }
 
 @layer components {
-  .paper-card {
-    @apply rounded-2xl border border-cream-deep bg-cream shadow-card;
+  .card {
+    @apply rounded-xl border border-line bg-surface-card shadow-card;
   }
   .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 text-sm font-bold uppercase tracking-wider transition active:scale-[.97] disabled:opacity-50;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold transition active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-seam text-cream shadow-[0_3px_0_#962a22] active:translate-y-[2px] active:shadow-[0_1px_0_#962a22];
+    @apply btn bg-brand text-white hover:bg-brand-dark;
   }
-  .btn-green {
-    @apply btn bg-outfield text-cream shadow-[0_3px_0_#143520] active:translate-y-[2px] active:shadow-[0_1px_0_#143520];
+  .btn-navy {
+    @apply btn bg-navy text-white hover:bg-navy-700;
   }
   .btn-ghost {
-    @apply btn border-2 border-ballpark/20 bg-cream text-ballpark hover:border-ballpark/50;
+    @apply btn border border-line bg-white text-navy hover:border-navy/40;
   }
   .field-input {
-    @apply w-full rounded-lg border-2 border-cream-deep bg-white/70 px-3 py-2.5 text-base text-ballpark outline-none transition placeholder:text-ballpark/40 focus:border-outfield focus:bg-white;
+    @apply w-full rounded-lg border border-line bg-white px-3 py-2.5 text-base text-navy outline-none transition placeholder:text-muted/60 focus:border-navy focus:ring-2 focus:ring-navy/15;
   }
-  .stitch-border {
-    background-image: repeating-linear-gradient(90deg, #c0362c 0 6px, transparent 6px 11px);
-    height: 2px;
+  .label {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-muted;
   }
-}
-
-.preserve-3d {
-  transform-style: preserve-3d;
-}
-.backface-hidden {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-.rotate-y-180 {
-  transform: rotateY(180deg);
+  .h-display {
+    @apply font-display font-bold uppercase tracking-wide;
+  }
 }
 
 .scroll-y {
@@ -65,57 +49,26 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Perforated ticket edges */
-.ticket {
-  --notch: 11px;
-  -webkit-mask:
-    radial-gradient(circle var(--notch) at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch) at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
-  mask:
-    radial-gradient(circle var(--notch) at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat,
-    radial-gradient(circle var(--notch) at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
-}
-
-.perforation {
-  background-image: repeating-linear-gradient(180deg, rgba(30, 32, 34, 0.35) 0 4px, transparent 4px 9px);
-  width: 2px;
-}
-
-.scoreboard-panel {
-  background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 6px),
-    linear-gradient(180deg, #1f5a31, #143520);
-}
-
-.ink-stamp {
-  mix-blend-mode: multiply;
-  filter: contrast(1.05);
-}
-
-.maplibregl-canvas {
-  outline: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
 @keyframes sheet-up {
   from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  to { transform: translateX(0) translateY(0); }
 }
 @keyframes sheet-left {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
 .sheet-enter {
-  animation: sheet-up 0.38s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  animation: sheet-up 0.3s cubic-bezier(0.2, 0.9, 0.25, 1) both;
 }
 @media (min-width: 1024px) {
   .sheet-enter {
     animation-name: sheet-left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -19,11 +19,17 @@ interface BallparkState {
   activeMapMode: MapMode;
   activeListMode: ListMode;
   soundEnabled: boolean;
+  /** True once the one-time "add details" prompt has been shown. */
+  hintSeen: boolean;
   /** Transient UI (not persisted) */
+  hintParkId: string | null;
   drawerParkId: string | null;
   shareOpen: boolean;
 
   setStatus: (id: string, status: ParkStatus) => void;
+  toggleWishlist: (id: string) => void;
+  showHint: (parkId: string) => void;
+  dismissHint: () => void;
   saveLog: (id: string, payload: LogPayload) => void;
   setTier: (id: string, tier: Tier | null) => void;
   resetPark: (id: string) => void;
@@ -39,14 +45,25 @@ export const useBallparkStore = create<BallparkState>()(
   persist(
     (set) => ({
       entries: {},
-      activeMapMode: 'vintage',
-      activeListMode: 'binder',
+      activeMapMode: 'atlas',
+      activeListMode: 'checklist',
       soundEnabled: true,
+      hintSeen: false,
+      hintParkId: null,
       drawerParkId: null,
       shareOpen: false,
 
       setStatus: (id, status) =>
         set((s) => ({ entries: { ...s.entries, [id]: { ...(s.entries[id] ?? emptyEntry()), status } } })),
+      toggleWishlist: (id) =>
+        set((s) => {
+          const cur = s.entries[id] ?? emptyEntry();
+          if (cur.status === 'visited') return s;
+          const status: ParkStatus = cur.status === 'wishlist' ? 'unvisited' : 'wishlist';
+          return { entries: { ...s.entries, [id]: { ...cur, status } } };
+        }),
+      showHint: (hintParkId) => set({ hintParkId, hintSeen: true }),
+      dismissHint: () => set({ hintParkId: null }),
       saveLog: (id, payload) =>
         set((s) => ({ entries: { ...s.entries, [id]: { ...payload } } })),
       setTier: (id, tier) =>
@@ -66,7 +83,11 @@ export const useBallparkStore = create<BallparkState>()(
     }),
     {
       name: 'ballpark-passport-v1',
-      version: 1,
+      version: 2,
+      migrate: (persisted) => {
+        const old = (persisted ?? {}) as { entries?: Record<string, ParkEntry>; soundEnabled?: boolean };
+        return { entries: old.entries ?? {}, soundEnabled: old.soundEnabled ?? true, activeMapMode: 'atlas', activeListMode: 'checklist', hintSeen: false };
+      },
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       partialize: (s) => ({
@@ -74,6 +95,7 @@ export const useBallparkStore = create<BallparkState>()(
         activeMapMode: s.activeMapMode,
         activeListMode: s.activeListMode,
         soundEnabled: s.soundEnabled,
+        hintSeen: s.hintSeen,
       }),
     },
   ),
