@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { computeStats, type Stats } from '@/lib/stats';
+import type { ShareContext, ShareNudge } from '@/lib/shareTypes';
 import { emptyEntry, type ListMode, type MapMode, type ParkEntry, type ParkStatus, type Ratings, type Tier } from '@/lib/types';
 
 export interface LogPayload {
@@ -21,10 +22,13 @@ interface BallparkState {
   soundEnabled: boolean;
   /** True once the one-time "add details" prompt has been shown. */
   hintSeen: boolean;
+  /** Most recently checked-off park, used to personalize share cards. */
+  lastVisitedId: string | null;
   /** Transient UI (not persisted) */
+  shareContext: ShareContext | null;
+  shareNudge: ShareNudge | null;
   hintParkId: string | null;
   drawerParkId: string | null;
-  shareOpen: boolean;
 
   setStatus: (id: string, status: ParkStatus) => void;
   toggleWishlist: (id: string) => void;
@@ -38,7 +42,9 @@ interface BallparkState {
   setSoundEnabled: (on: boolean) => void;
   openDrawer: (id: string) => void;
   closeDrawer: () => void;
-  setShareOpen: (open: boolean) => void;
+  openShare: (context?: ShareContext) => void;
+  closeShare: () => void;
+  setShareNudge: (nudge: ShareNudge | null) => void;
 }
 
 export const useBallparkStore = create<BallparkState>()(
@@ -49,12 +55,17 @@ export const useBallparkStore = create<BallparkState>()(
       activeListMode: 'checklist',
       soundEnabled: true,
       hintSeen: false,
+      lastVisitedId: null,
       hintParkId: null,
       drawerParkId: null,
-      shareOpen: false,
+      shareContext: null,
+      shareNudge: null,
 
       setStatus: (id, status) =>
-        set((s) => ({ entries: { ...s.entries, [id]: { ...(s.entries[id] ?? emptyEntry()), status } } })),
+        set((s) => ({
+          entries: { ...s.entries, [id]: { ...(s.entries[id] ?? emptyEntry()), status } },
+          lastVisitedId: status === 'visited' ? id : s.lastVisitedId,
+        })),
       toggleWishlist: (id) =>
         set((s) => {
           const cur = s.entries[id] ?? emptyEntry();
@@ -65,7 +76,10 @@ export const useBallparkStore = create<BallparkState>()(
       showHint: (hintParkId) => set({ hintParkId, hintSeen: true }),
       dismissHint: () => set({ hintParkId: null }),
       saveLog: (id, payload) =>
-        set((s) => ({ entries: { ...s.entries, [id]: { ...payload } } })),
+        set((s) => ({
+          entries: { ...s.entries, [id]: { ...payload } },
+          lastVisitedId: payload.status === 'visited' ? id : s.lastVisitedId,
+        })),
       setTier: (id, tier) =>
         set((s) => ({ entries: { ...s.entries, [id]: { ...(s.entries[id] ?? emptyEntry()), tier } } })),
       resetPark: (id) =>
@@ -79,7 +93,9 @@ export const useBallparkStore = create<BallparkState>()(
       setSoundEnabled: (soundEnabled) => set({ soundEnabled }),
       openDrawer: (drawerParkId) => set({ drawerParkId }),
       closeDrawer: () => set({ drawerParkId: null }),
-      setShareOpen: (shareOpen) => set({ shareOpen }),
+      openShare: (context) => set({ shareContext: context ?? {}, shareNudge: null }),
+      closeShare: () => set({ shareContext: null }),
+      setShareNudge: (shareNudge) => set({ shareNudge }),
     }),
     {
       name: 'ballpark-passport-v1',
@@ -96,6 +112,7 @@ export const useBallparkStore = create<BallparkState>()(
         activeListMode: s.activeListMode,
         soundEnabled: s.soundEnabled,
         hintSeen: s.hintSeen,
+        lastVisitedId: s.lastVisitedId,
       }),
     },
   ),

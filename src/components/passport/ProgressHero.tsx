@@ -14,7 +14,7 @@ function Bar({ value, total, className }: { value: number; total: number; classN
 
 export function ProgressHero() {
   const stats = useStats();
-  const setShareOpen = useBallparkStore((s) => s.setShareOpen);
+  const openShare = useBallparkStore((s) => s.openShare);
 
   return (
     <section className="overflow-hidden rounded-xl bg-navy text-white shadow-card" aria-label="Your progress">
@@ -26,7 +26,7 @@ export function ProgressHero() {
             <span className="text-3xl text-white/60 sm:text-4xl">/ {stats.total}</span>
           </div>
         </div>
-        <button type="button" onClick={() => setShareOpen(true)} className="btn bg-white !px-4 text-navy hover:bg-navy-50" aria-label="Share my passport">
+        <button type="button" onClick={() => openShare()} className="btn bg-white !px-4 text-navy hover:bg-navy-50" aria-label="Share my passport">
           <Share2 size={17} /> Share
         </button>
       </div>

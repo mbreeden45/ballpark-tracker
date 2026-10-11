@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Bookmark, CalendarPlus, Car, ClipboardCopy, CloudSun, Home, Plane, Sparkles, Umbrella } from 'lucide-react';
+import { AlertTriangle, Bookmark, CalendarPlus, Car, ClipboardCopy, CloudSun, Home, Plane, Share2, Sparkles, Umbrella } from 'lucide-react';
 import { computeStats } from '@/lib/stats';
 import { fetchForecast, isForecastable, type DayForecast } from '@/lib/api/weatherApi';
 import { formatLocalTime } from '@/lib/planner/engine';
@@ -105,6 +105,7 @@ interface Props {
 export function ItineraryView({ itinerary, home }: Props) {
   const entries = useBallparkStore((s) => s.entries);
   const setStatus = useBallparkStore((s) => s.setStatus);
+  const openShare = useBallparkStore((s) => s.openShare);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -215,6 +216,7 @@ export function ItineraryView({ itinerary, home }: Props) {
 
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={download} className="btn-navy"><CalendarPlus size={17} /> Add to calendar</button>
+        <button type="button" onClick={() => openShare({ card: 'trip', trip: { itinerary, home } })} className="btn-primary"><Share2 size={17} /> Share trip</button>
         <button type="button" onClick={copy} className="btn-ghost"><ClipboardCopy size={17} /> {copied ? 'Copied' : 'Copy itinerary'}</button>
         <button type="button" onClick={wishlistAll} disabled={saved || itinerary.newParks === 0} className={cn('btn-ghost', saved && '!border-ok !text-ok')}>
           <Bookmark size={17} /> {saved ? 'On your wishlist' : 'Wishlist these parks'}

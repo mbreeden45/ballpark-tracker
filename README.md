@@ -4,6 +4,7 @@ A mobile-first MLB ballpark passport and survey app: stamp parks on a vintage at
 
 - Next.js 15 (App Router) · TypeScript · Tailwind CSS · Zustand (persisted to localStorage)
 - Map: react-simple-maps Albers atlas (includes southern Ontario)
+- Share Studio: 8 auto-generated story cards (map poster, grid, big number, check-in with your own photo, milestone, challenge with QR, road trip, 3-slide set)
 - Trip Planner at /planner reads your passport and the live MLB schedule
 - Key-less APIs: MLB Stats API (schedule, box scores), Wikipedia REST (photos), Open-Meteo (elevation, forecast, city search), OSRM (road times)
 

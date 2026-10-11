@@ -11,6 +11,7 @@ import { useBallparkStore, useStats } from '@/store/useBallparkStore';
 import { cn, todayISO } from '@/lib/utils';
 import { PlannerForm, addDays, sampleWindow, type FormState } from './PlannerForm';
 import { ItineraryView } from './ItineraryView';
+import { SocialShareModal } from '@/components/Share/SocialShareModal';
 
 const STORAGE_KEY = 'ballpark-planner-v1';
 const MAX_RANGE_DAYS = 21;
@@ -199,6 +200,7 @@ export function PlannerApp() {
           )}
         </section>
       </div>
+      <SocialShareModal />
     </main>
   );
 }

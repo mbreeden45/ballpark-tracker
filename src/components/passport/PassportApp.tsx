@@ -14,6 +14,7 @@ import { CollectionView } from './CollectionView';
 import { VisitsView } from './VisitsView';
 import { RankingsView } from './RankingsView';
 import { FirstLogHint } from './FirstLogHint';
+import { ShareNudge } from './ShareNudge';
 
 const TABS: { mode: ListMode; label: string; icon: typeof ListChecks; mobileOnly?: boolean }[] = [
   { mode: 'checklist', label: 'Checklist', icon: ListChecks },
@@ -66,6 +67,7 @@ export function PassportApp() {
       <FieldLogDrawer />
       <SocialShareModal />
       <FirstLogHint />
+      <ShareNudge />
     </main>
   );
 }
