@@ -1,5 +1,4 @@
 import { PARKS } from '../parks';
-import { haversineMiles } from '../utils';
 import type { Ballpark } from '../types';
 
 export interface HomeGame {
@@ -24,7 +23,7 @@ export interface HomeGame {
 }
 
 interface ApiTeam {
-  team: { id: number; name: string; abbreviation?: string };
+  team: { id: number; name: string; abbreviation?: string; venue?: { id: number } };
   probablePitcher?: { fullName?: string };
 }
 
@@ -37,7 +36,7 @@ interface ApiGame {
   gameNumber?: number;
   status?: { detailedState?: string; abstractGameState?: string };
   teams: { home: ApiTeam; away: ApiTeam };
-  venue?: { location?: { defaultCoordinates?: { latitude: number; longitude: number } } };
+  venue?: { id: number };
 }
 
 interface ApiResponse {
@@ -47,8 +46,9 @@ interface ApiResponse {
 const cache = new Map<string, HomeGame[]>();
 const parkByTeam = new Map<number, Ballpark>(PARKS.map((p) => [p.mlbId, p]));
 
-/** A game counts as a home-park game when the venue is within this distance of the club's ballpark. */
-const NEUTRAL_SITE_MILES = 25;
+/** Ask the API for only what the planner reads; a full season shrinks from many MB to about 1.4 MB. */
+const FIELDS =
+  'dates,date,games,gamePk,gameDate,officialDate,dayNight,doubleHeader,gameNumber,status,detailedState,abstractGameState,teams,home,away,team,id,name,abbreviation,venue,probablePitcher,fullName';
 
 /**
  * Loads every regular-season game in a date range and keeps the ones played at a club's own ballpark.
@@ -61,7 +61,7 @@ export async function fetchHomeGames(startDate: string, endDate: string, signal?
 
   const url =
     `https://statsapi.mlb.com/api/v1/schedule?sportId=1&gameType=R&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}` +
-    '&hydrate=team,probablePitcher,venue(location)';
+    `&hydrate=team,probablePitcher&fields=${FIELDS}`;
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`MLB schedule responded ${res.status}`);
   const json = (await res.json()) as ApiResponse;
@@ -73,8 +73,9 @@ export async function fetchHomeGames(startDate: string, endDate: string, signal?
       if (/postponed|cancelled|suspended/i.test(state)) continue;
       const park = parkByTeam.get(g.teams.home.team.id);
       if (!park) continue;
-      const coords = g.venue?.location?.defaultCoordinates;
-      if (coords && haversineMiles(park.coordinates, [coords.longitude, coords.latitude]) > NEUTRAL_SITE_MILES) continue;
+      // Neutral-site games (international series, special events) are not played at the club's own venue.
+      const homeVenueId = g.teams.home.team.venue?.id;
+      if (homeVenueId !== undefined && g.venue?.id !== undefined && g.venue.id !== homeVenueId) continue;
       const startUtc = Date.parse(g.gameDate);
       if (Number.isNaN(startUtc)) continue;
       games.push({

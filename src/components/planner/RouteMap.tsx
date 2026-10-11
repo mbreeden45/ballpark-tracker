@@ -15,16 +15,18 @@ export function RouteMap({ itinerary, home, className }: Props) {
   const points: [number, number][] = [
     ...(home ? [home.coordinates] : []),
     ...itinerary.stops.map((s) => s.park.coordinates),
-    ...(home && itinerary.returnLeg ? [home.coordinates] : []),
+    
   ];
   const stopIds = new Set(itinerary.stops.map((s) => s.park.id));
 
   const segments: { from: [number, number]; to: [number, number]; fly: boolean }[] = [];
-  itinerary.stops.forEach((stop, i) => {
+  if (itinerary.hub && home) {
+    itinerary.stops.forEach((stop) => segments.push({ from: home.coordinates, to: stop.park.coordinates, fly: false }));
+  } else itinerary.stops.forEach((stop, i) => {
     const prev = i === 0 ? home?.coordinates : itinerary.stops[i - 1].park.coordinates;
     if (prev) segments.push({ from: prev, to: stop.park.coordinates, fly: stop.leg?.mode === 'fly' });
   });
-  if (home && itinerary.returnLeg) {
+  if (home && itinerary.returnLeg && !itinerary.hub) {
     const last = itinerary.stops[itinerary.stops.length - 1];
     segments.push({ from: last.park.coordinates, to: home.coordinates, fly: itinerary.returnLeg.mode === 'fly' });
   }

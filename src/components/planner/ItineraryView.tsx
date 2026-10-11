@@ -19,8 +19,18 @@ function hoursLabel(h: number): string {
   return hr ? `${hr}h ${String(min).padStart(2, '0')}m` : `${min}m`;
 }
 
-function LegRow({ leg, label }: { leg: Leg; label?: string }) {
+function LegRow({ leg, label, hub }: { leg: Leg; label?: string; hub?: boolean }) {
   const fly = leg.mode === 'fly';
+  if (hub) {
+    return (
+      <div className="my-1 ml-[15px] flex items-center gap-2 border-l-2 border-dashed border-silver py-2 pl-5 text-xs text-muted">
+        <Car size={14} />
+        <span>
+          Day trip from {leg.fromLabel} · {hoursLabel(leg.hours)} each way · {Math.round(leg.miles).toLocaleString()} mi each way
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="my-1 ml-[15px] flex items-center gap-2 border-l-2 border-dashed border-silver py-2 pl-5 text-xs text-muted">
       {fly ? <Plane size={14} className="text-brand" /> : <Car size={14} />}
@@ -164,7 +174,7 @@ export function ItineraryView({ itinerary, home }: Props) {
             { v: `${itinerary.stops.length}`, l: 'Games' },
             { v: `${itinerary.newParks}`, l: 'New parks' },
             { v: `${itinerary.totalMiles.toLocaleString()}`, l: 'Miles' },
-            { v: hoursLabel(hours), l: 'Travel time' },
+            { v: hoursLabel(hours), l: itinerary.hub ? 'Driving (round trips)' : 'Travel time' },
           ].map((m) => (
             <div key={m.l} className="bg-white py-3">
               <div className="font-display text-2xl font-bold leading-none">{m.v}</div>
@@ -199,7 +209,7 @@ export function ItineraryView({ itinerary, home }: Props) {
         )}
         {itinerary.stops.map((s, i) => (
           <div key={s.game.gamePk}>
-            {s.leg && <LegRow leg={s.leg} />}
+            {s.leg && <LegRow leg={s.leg} hub={Boolean(itinerary.hub)} />}
             <StopCard stop={s} index={i} />
           </div>
         ))}

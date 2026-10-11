@@ -56,11 +56,14 @@ export const TripCard = forwardRef<HTMLDivElement, Props>(function TripCard({ fo
                 ...it.stops.map((s, i) => ({ xy: proj(s.park.coordinates), label: String(i + 1), color: s.park.primaryColor })),
               ];
               const line = pts.filter((p) => p.xy).map((p) => (p.xy as [number, number]).join(',')).join(' ');
+              const homeXy = home ? proj(home.coordinates) : null;
               const viewW = tripView(trip.itinerary, home?.coordinates, mapAspect)[2];
               const k = viewW / (story ? 312 : 150);
               return (
                 <>
-                  <polyline points={line} fill="none" stroke={t.accent} strokeWidth={2.4 * k} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={`${7 * k} ${5 * k}`} />
+ {it.hub && homeXy
+                    ? pts.slice(1).map((p, i) => p.xy && <line key={i} x1={homeXy[0]} y1={homeXy[1]} x2={p.xy[0]} y2={p.xy[1]} stroke={t.accent} strokeWidth={2.4 * k} strokeDasharray={`${7 * k} ${5 * k}`} strokeLinecap="round" />)
+                    : <polyline points={line} fill="none" stroke={t.accent} strokeWidth={2.4 * k} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={`${7 * k} ${5 * k}`} />}
                   {pts.map((p, i) =>
                     p.xy ? (
                       <g key={i} transform={`translate(${p.xy[0]} ${p.xy[1]})`}>

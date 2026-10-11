@@ -36,7 +36,7 @@ export function itineraryToText(it: Itinerary): string {
   const rows = it.stops.map((s, i) => {
     const g = s.game;
     const when = `${formatDate(g.date, { weekday: 'short', month: 'short', day: 'numeric' })} ${formatLocalTime(g.startUtc, s.park.timeZone)}`;
-    const travel = s.leg ? ` (${s.leg.mode === 'drive' ? 'drive' : 'flight'} ${s.leg.hours.toFixed(1)} h, ${Math.round(s.leg.miles)} mi)` : '';
+    const travel = s.leg ? ` (${it.hub ? 'day trip, ' : ''}${s.leg.mode === 'drive' ? 'drive' : 'flight'} ${s.leg.hours.toFixed(1)} h${it.hub ? ' each way' : ''}, ${Math.round(s.leg.miles)} mi)` : '';
     return `${i + 1}. ${when}: ${g.awayName} at ${g.homeName}, ${s.park.venue}${travel}`;
   });
   return [`Ballpark trip: ${it.newParks} new parks, ${it.totalMiles.toLocaleString()} miles`, ...rows].join('\n');

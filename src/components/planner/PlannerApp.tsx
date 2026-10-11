@@ -4,25 +4,35 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { CalendarSearch, ClipboardCheck, SlidersHorizontal } from 'lucide-react';
 import { fetchHomeGames } from '@/lib/api/scheduleApi';
-import { planTrips } from '@/lib/planner/engine';
+import { planHub, planTrips } from '@/lib/planner/engine';
 import { buildTravel } from '@/lib/planner/travel';
 import type { PlanResult } from '@/lib/planner/types';
 import { useBallparkStore, useStats } from '@/store/useBallparkStore';
-import { cn, todayISO } from '@/lib/utils';
-import { PlannerForm, addDays, sampleWindow, type FormState } from './PlannerForm';
+import { cn, formatDate, todayISO } from '@/lib/utils';
+import { PlannerForm, addDays, sampleWindow, seasonWindow, type FormState } from './PlannerForm';
 import { ItineraryView } from './ItineraryView';
 import { SocialShareModal } from '@/components/Share/SocialShareModal';
 
 const STORAGE_KEY = 'ballpark-planner-v1';
 const MAX_RANGE_DAYS = 21;
+const MAX_WINDOW_DAYS = 210;
 
 function defaults(): FormState {
   const today = todayISO();
+  const season = seasonWindow();
   return {
+    mode: 'dates',
     startDate: today,
     endDate: addDays(today, 6),
+    windowStart: season.startDate,
+    windowEnd: season.endDate,
+    tripDays: 7,
+    teamId: null,
+    teamOnly: true,
     home: null,
-    returnHome: true,
+    base: null,
+    roundTrip: true,
+    stay: true,
     preferredTeamIds: [],
     mustParkIds: [],
     includeVisited: false,
@@ -30,6 +40,13 @@ function defaults(): FormState {
     allowFlying: false,
     maxGames: 5,
   };
+}
+
+function rangeLabel(it: PlanResult['itineraries'][number]): string {
+  const first = it.stops[0].game.date;
+  const last = it.stops[it.stops.length - 1].game.date;
+  const fmt = (d: string) => formatDate(d, { month: 'short', day: 'numeric' });
+  return first === last ? fmt(first) : `${fmt(first)} – ${fmt(last)}`;
 }
 
 function daysBetween(a: string, b: string): number {
@@ -56,7 +73,7 @@ export function PlannerApp() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as Partial<FormState>;
-        setForm((f) => ({ ...f, ...saved, startDate: f.startDate, endDate: f.endDate }));
+        setForm((f) => ({ ...f, ...saved, startDate: f.startDate, endDate: f.endDate, windowStart: f.windowStart, windowEnd: f.windowEnd }));
       }
     } catch {
       /* ignore unreadable saved preferences */
@@ -67,9 +84,11 @@ export function PlannerApp() {
   useEffect(() => {
     if (!loaded.current) return;
     try {
-      const { startDate: _s, endDate: _e, ...rest } = form;
-      void _s;
-      void _e;
+      const { startDate, endDate, windowStart, windowEnd, ...rest } = form;
+      void startDate;
+      void endDate;
+      void windowStart;
+      void windowEnd;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
     } catch {
       /* storage unavailable */
@@ -81,26 +100,48 @@ export function PlannerApp() {
 
   const run = async () => {
     setError('');
-    if (form.endDate < form.startDate) {
+    const team = form.mode === 'team';
+    const [from, to] = team ? [form.windowStart, form.windowEnd] : [form.startDate, form.endDate];
+    const limit = team ? MAX_WINDOW_DAYS : MAX_RANGE_DAYS;
+    if (to < from) {
       setError('The end date must be on or after the start date.');
       return;
     }
-    if (daysBetween(form.startDate, form.endDate) + 1 > MAX_RANGE_DAYS) {
-      setError(`Please keep the trip window to ${MAX_RANGE_DAYS} days or fewer.`);
+    if (daysBetween(from, to) + 1 > limit) {
+      setError(`Please keep the ${team ? 'search window' : 'trip window'} to ${limit} days or fewer.`);
       return;
     }
+    if (team && form.teamId === null) {
+      setError('Choose a team to follow.');
+      return;
+    }
+    if (form.mode === 'destination' && !form.base) {
+      setError('Choose the city you are going to.');
+      return;
+    }
+
+    // Where travel is measured from: the destination city, or an optional starting city.
+    const origin = form.mode === 'destination' ? form.base : form.home;
+    const options = {
+      startDate: from,
+      endDate: to,
+      home: origin,
+      returnHome: form.mode === 'destination' && form.stay ? true : form.roundTrip,
+      preferredTeamIds: team && form.teamId !== null ? [form.teamId] : form.preferredTeamIds,
+      mustParkIds: form.mustParkIds,
+      includeVisited: form.includeVisited,
+      maxDriveHours: form.maxDriveHours,
+      allowFlying: form.mode === 'destination' && form.stay ? false : form.allowFlying,
+      maxGames: form.maxGames,
+      visited: visitedIds,
+      wishlist: wishlistIds,
+      ...(team ? { teamOnly: form.teamOnly, teamWeight: 12, maxSpanDays: form.tripDays } : {}),
+    };
+
     setBusy(true);
     try {
-      const [games, travel] = await Promise.all([fetchHomeGames(form.startDate, form.endDate), buildTravel(form.home)]);
-      const plan = planTrips(
-        games,
-        {
-          ...form,
-          visited: visitedIds,
-          wishlist: wishlistIds,
-        },
-        travel,
-      );
+      const [games, travel] = await Promise.all([fetchHomeGames(from, to), buildTravel(origin)]);
+      const plan = form.mode === 'destination' && form.stay && origin ? planHub(games, options, travel, origin) : planTrips(games, options, travel);
       setResult(plan);
       setPlanned(form);
       setSelected(0);
@@ -114,7 +155,8 @@ export function PlannerApp() {
 
   const useSample = () => {
     const s = sampleWindow();
-    setForm((f) => ({ ...f, startDate: s.startDate, endDate: s.endDate }));
+    const season = seasonWindow();
+    setForm((f) => ({ ...f, startDate: s.startDate, endDate: s.endDate, windowStart: season.startDate, windowEnd: season.endDate }));
     setResult(null);
     setShowForm(true);
   };
@@ -126,7 +168,7 @@ export function PlannerApp() {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="h-display text-4xl leading-none">Trip Planner</h1>
-          <p className="mt-1 text-sm text-muted">Pick your dates and we&apos;ll find realistic game-to-game routes that hit the parks you still need.</p>
+          <p className="mt-1 text-sm text-muted">Plan around your dates, a team, or a destination. We&apos;ll find realistic routes that hit the parks you still need.</p>
         </div>
         <Link href="/" className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm">
           <ClipboardCheck size={16} className="text-ok" />
@@ -157,7 +199,7 @@ export function PlannerApp() {
             <div className="card p-8 text-center">
               <CalendarSearch size={36} className="mx-auto text-silver" />
               <p className="mt-2 font-display text-2xl font-bold">Your trips show up here</p>
-              <p className="mt-1 text-sm text-muted">Set your dates and tap Plan my trip. We read the live MLB schedule, check real drive times, and favor parks you haven&apos;t visited.</p>
+              <p className="mt-1 text-sm text-muted">Set your dates and tap Plan my trip. Choose what you&apos;re planning around (dates, a team, or a destination) and we&apos;ll read the MLB schedule, check real drive times, and favor parks you haven&apos;t visited.</p>
             </div>
           )}
           {busy && <div className="card p-8 text-center text-sm text-muted">Reading the schedule and checking drive times…</div>}
@@ -191,11 +233,12 @@ export function PlannerApp() {
                   >
                     <div className="text-xs font-semibold uppercase tracking-wide opacity-80">{o.tag}</div>
                     <div className="font-display text-2xl font-bold leading-tight">{o.newParks} new</div>
-                    <div className="text-xs opacity-80">{o.stops.length} games · {o.totalMiles.toLocaleString()} mi</div>
+                    <div className="text-xs opacity-80">{o.stops.length} {o.stops.length === 1 ? "game" : "games"} · {o.totalMiles.toLocaleString()} mi</div>
+                    <div className="text-xs font-semibold opacity-90">{rangeLabel(o)}</div>
                   </button>
                 ))}
               </div>
-              <ItineraryView key={it.id + planned.startDate} itinerary={it} home={planned.home} />
+              <ItineraryView key={it.id + planned.startDate + planned.mode} itinerary={it} home={planned.mode === 'destination' ? planned.base : planned.home} />
             </div>
           )}
         </section>

@@ -1,7 +1,7 @@
 import { getPark } from '../parks';
 import type { HomeGame } from '../api/scheduleApi';
 import { HOME_ID, chooseLeg, returnLeg, type Travel } from './travel';
-import type { Itinerary, Leg, PlanResult, PlannerOptions, Stop } from './types';
+import type { HomePoint, Itinerary, Leg, PlanResult, PlannerOptions, Stop } from './types';
 
 const HOUR = 3_600_000;
 /** Typical game length plus time to leave the ballpark. */
@@ -36,11 +36,26 @@ function legCost(leg: Leg | null): number {
 
 function gameValue(game: HomeGame, opts: PlannerOptions, preferred: Set<number>): number {
   const isNew = !opts.visited.has(game.parkId);
+  const tw = opts.teamWeight ?? 8;
   let v = isNew ? 10 : 1.5;
   if (isNew && opts.wishlist.has(game.parkId)) v += 4;
-  if (preferred.has(game.homeTeamId)) v += 8;
-  if (preferred.has(game.awayTeamId)) v += isNew ? 5 : 2;
+  if (preferred.has(game.homeTeamId)) v += tw;
+  if (preferred.has(game.awayTeamId)) v += isNew ? tw * 0.625 : tw * 0.25;
   return v;
+}
+
+function dayNumber(date: string): number {
+  const [y, m, d] = date.split('-').map(Number);
+  return Math.round(Date.UTC(y, m - 1, d) / 86_400_000);
+}
+
+function filterPool(allGames: HomeGame[], opts: PlannerOptions): HomeGame[] {
+  const preferred = new Set(opts.preferredTeamIds);
+  return allGames
+    .filter((g) => g.date >= opts.startDate && g.date <= opts.endDate)
+    .filter((g) => opts.includeVisited || !opts.visited.has(g.parkId))
+    .filter((g) => !(opts.teamOnly && preferred.size > 0) || preferred.has(g.homeTeamId) || preferred.has(g.awayTeamId))
+    .sort((a, b) => a.startUtc - b.startUtc);
 }
 
 function windowStartUtc(startDate: string): number {
@@ -59,10 +74,7 @@ export function planTrips(allGames: HomeGame[], opts: PlannerOptions, travel: Tr
   const must = new Set(opts.mustParkIds);
   const winStart = windowStartUtc(opts.startDate);
 
-  const pool = allGames
-    .filter((g) => g.date >= opts.startDate && g.date <= opts.endDate)
-    .filter((g) => opts.includeVisited || !opts.visited.has(g.parkId))
-    .sort((a, b) => a.startUtc - b.startUtc);
+  const pool = filterPool(allGames, opts);
 
   const mustBonus = (parkId: string, chain: Set<string>) => (must.has(parkId) && !chain.has(parkId) ? 25 : 0);
   const all: Chain[] = [];
@@ -95,6 +107,7 @@ export function planTrips(allGames: HomeGame[], opts: PlannerOptions, travel: Tr
         const g = pool[j];
         const gap = g.startUtc - last.startUtc;
         if (gap > MAX_GAP_MS) break;
+        if (opts.maxSpanDays && dayNumber(g.date) - dayNumber(pool[chain.idx[0]].date) + 1 > opts.maxSpanDays) break;
         if (chain.parkIds.has(g.parkId)) continue;
         const leg = chooseLeg(travel, last.parkId, g.parkId, opts.maxDriveHours, opts.allowFlying);
         if (!leg) continue;
@@ -140,13 +153,16 @@ export function planTrips(allGames: HomeGame[], opts: PlannerOptions, travel: Tr
       let diff = 0;
       c.parkIds.forEach((id) => !p.parkIds.has(id) && diff++);
       p.parkIds.forEach((id) => !c.parkIds.has(id) && diff++);
-      return diff >= 2;
+      const gapDays = Math.abs(dayNumber(pool[c.idx[0]].date) - dayNumber(pool[p.idx[0]].date));
+      return diff >= 2 || gapDays >= 7;
     });
     if (distinct) picked.push(c);
     if (picked.length === 3) break;
   }
 
-  const itineraries = picked.map((c, n) => buildItinerary(c, pool, opts, travel, preferred, n));
+  // Drop alternatives that are far weaker than the best option; a one-game "option" is not a plan.
+  const strong = picked.filter((c) => c.score >= (picked[0]?.score ?? 0) * 0.65);
+  const itineraries = strong.map((c, n) => buildItinerary(c, pool, opts, travel, preferred, n));
   labelItineraries(itineraries);
   return { itineraries, gamesConsidered: pool.length, roadDataUsed: travel.roadDataUsed };
 }
@@ -218,4 +234,80 @@ function labelItineraries(list: Itinerary[]): void {
   list.forEach((i, n) => {
     if (i.tag.startsWith('Option')) i.tag = `Option ${n + 1}`;
   });
+}
+
+
+/**
+ * Stay-in-one-place planning: you keep a base city and day-trip to games within your drive limit.
+ * Each day holds at most one game, and each ballpark appears once.
+ */
+export function planHub(allGames: HomeGame[], opts: PlannerOptions, travel: Travel, base: HomePoint): PlanResult {
+  const preferred = new Set(opts.preferredTeamIds);
+  const pool = filterPool(allGames, opts);
+
+  interface Candidate {
+    game: HomeGame;
+    leg: Leg;
+    value: number;
+  }
+  const candidates: Candidate[] = [];
+  for (const game of pool) {
+    const road = travel.drive(HOME_ID, game.parkId);
+    if (road.hours > opts.maxDriveHours) continue;
+    const leg: Leg = { mode: 'drive', hours: road.hours, miles: road.miles, fromLabel: base.label, source: road.source };
+    candidates.push({ game, leg, value: gameValue(game, opts, preferred) - leg.hours * 0.8 });
+  }
+
+  const options: Itinerary[] = [];
+  const usedParks = new Set<string>();
+  for (let n = 0; n < 3; n++) {
+    const takenDays = new Set<string>();
+    const takenParks = new Set<string>();
+    const chosen: Candidate[] = [];
+    for (const c of [...candidates].sort((a, b) => b.value - a.value)) {
+      if (chosen.length >= opts.maxGames) break;
+      if (usedParks.has(c.game.parkId) || takenParks.has(c.game.parkId) || takenDays.has(c.game.date)) continue;
+      chosen.push(c);
+      takenDays.add(c.game.date);
+      takenParks.add(c.game.parkId);
+    }
+    if (!chosen.length) break;
+    const total = chosen.reduce((sum, c) => sum + c.value, 0);
+    if (options.length && total < options[0].score * 0.5) break;
+    chosen.sort((a, b) => a.game.startUtc - b.game.startUtc);
+    chosen.forEach((c) => usedParks.add(c.game.parkId));
+
+    const stops: Stop[] = chosen.map((c) => {
+      const park = getPark(c.game.parkId)!;
+      const warnings: string[] = [];
+      if (c.game.dayNight === 'night' && c.leg.hours >= 2.5) warnings.push(`Night game plus about ${c.leg.hours.toFixed(1)} hours back to ${base.label}`);
+      if (c.game.doubleHeader) warnings.push(`Doubleheader, game ${c.game.gameNumber}. Double-check which game you want.`);
+      return {
+        game: c.game,
+        park,
+        leg: c.leg,
+        isNew: !opts.visited.has(c.game.parkId),
+        isWishlist: opts.wishlist.has(c.game.parkId),
+        preferredHome: preferred.has(c.game.homeTeamId),
+        preferredAway: preferred.has(c.game.awayTeamId),
+        warnings,
+      };
+    });
+    options.push({
+      id: `option-${n + 1}`,
+      tag: `Option ${n + 1}`,
+      stops,
+      returnLeg: null,
+      newParks: stops.filter((s) => s.isNew).length,
+      totalMiles: Math.round(chosen.reduce((sum, c) => sum + c.leg.miles * 2, 0)),
+      travelHours: chosen.reduce((sum, c) => sum + c.leg.hours * 2, 0),
+      flights: 0,
+      preferredGames: stops.filter((s) => s.preferredHome || s.preferredAway).length,
+      score: chosen.reduce((sum, c) => sum + c.value, 0),
+      missingMust: [],
+      hub: base,
+    });
+  }
+  options.forEach((o, i) => (o.tag = i === 0 ? 'Best picks' : `Option ${i + 1}`));
+  return { itineraries: options, gamesConsidered: pool.length, roadDataUsed: travel.roadDataUsed };
 }

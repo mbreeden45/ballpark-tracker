@@ -8,9 +8,10 @@ import type { HomePoint } from '@/lib/planner/types';
 interface Props {
   value: HomePoint | null;
   onChange: (home: HomePoint | null) => void;
+  placeholder?: string;
 }
 
-export function CityPicker({ value, onChange }: Props) {
+export function CityPicker({ value, onChange, placeholder = 'City, e.g. Denver' }: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Place[]>([]);
   const [busy, setBusy] = useState(false);
@@ -57,7 +58,7 @@ export function CityPicker({ value, onChange }: Props) {
     return (
       <div className="flex min-h-[44px] items-center justify-between gap-2 rounded-lg border border-line bg-white px-3">
         <span className="flex items-center gap-2 text-sm font-medium"><MapPin size={16} className="text-brand" /> {value.label}</span>
-        <button type="button" onClick={() => onChange(null)} aria-label="Clear starting city" className="flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-surface">
+        <button type="button" onClick={() => onChange(null)} aria-label="Clear city" className="flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-surface">
           <X size={16} />
         </button>
       </div>
@@ -71,8 +72,8 @@ export function CityPicker({ value, onChange }: Props) {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="City, e.g. Denver"
-          aria-label="Starting city"
+          placeholder={placeholder}
+          aria-label="City"
           className="field-input"
           autoComplete="off"
         />

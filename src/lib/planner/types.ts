@@ -19,6 +19,12 @@ export interface PlannerOptions {
   maxGames: number;
   visited: ReadonlySet<string>;
   wishlist: ReadonlySet<string>;
+  /** A trip may span at most this many calendar days (team mode). */
+  maxSpanDays?: number;
+  /** Only consider games involving the preferred teams. */
+  teamOnly?: boolean;
+  /** How strongly preferred-team games are favored. */
+  teamWeight?: number;
 }
 
 export type TravelMode = 'drive' | 'fly';
@@ -55,6 +61,8 @@ export interface Itinerary {
   preferredGames: number;
   score: number;
   missingMust: string[];
+  /** Set for stay-in-one-place plans: every stop is a day trip from this base. */
+  hub?: HomePoint;
 }
 
 export interface PlanResult {
