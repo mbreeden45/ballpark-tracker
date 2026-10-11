@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { toPng } from 'html-to-image';
-import { Camera, ChevronLeft, ChevronRight, ClipboardCopy, Download, ImagePlus, MessageCircle, RotateCcw, Share2, X } from 'lucide-react';
+import { toJpeg, toPng } from 'html-to-image';
+import { Camera, ChevronLeft, ChevronRight, ClipboardCopy, Download, ImagePlus, MessageCircle, MessageSquareText, RotateCcw, Send, Share2, X } from 'lucide-react';
 import { PARKS, getPark } from '@/lib/parks';
 import { latestMilestone } from '@/lib/milestones';
 import { buildCaption } from '@/lib/shareCaption';
@@ -93,6 +93,7 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [preview, setPreview] = useState<string[] | null>(null);
   const [host, setHost] = useState('');
   const [origin, setOrigin] = useState('');
 
@@ -160,21 +161,22 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
 
   const waitingOnAssets = (card === 'challenge' && !qr) || (card === 'checkin' && wiki.loading && !userPhoto);
 
-  const renderAll = useCallback(async (): Promise<string[]> => {
+  const renderAll = useCallback(async (kind: 'png' | 'jpeg' = 'png'): Promise<string[]> => {
     if (document.fonts?.ready) await document.fonts.ready;
     const opts = { pixelRatio: PIXEL_RATIO, cacheBust: true, width: w, height: h, style: { transform: 'none', margin: '0' } };
     const out: string[] = [];
     for (let i = 0; i < slots.length; i++) {
       const node = nodes.current[i];
       if (!node) throw new Error('Card not mounted');
-      await toPng(node, opts); // warm-up pass: Safari drops fonts and SVG on the first render
-      out.push(await toPng(node, opts));
+      const render = kind === 'jpeg' ? (n: HTMLElement) => toJpeg(n, { ...opts, quality: 0.95, backgroundColor: '#041E42' }) : (n: HTMLElement) => toPng(n, opts);
+      await render(node); // warm-up pass: Safari drops fonts and SVG on the first render
+      out.push(await render(node));
     }
     return out;
   }, [slots.length, w, h]);
 
   const baseName = `ballpark-passport-${card}`;
-  const fileNames = (n: number) => Array.from({ length: n }, (_, i) => (n > 1 ? `${baseName}-${i + 1}.png` : `${baseName}-${format}.png`));
+  const fileNames = (n: number, ext = 'png') => Array.from({ length: n }, (_, i) => (n > 1 ? `${baseName}-${i + 1}.${ext}` : `${baseName}-${format}.${ext}`));
 
   const download = (urls: string[]) => {
     const names = fileNames(urls.length);
@@ -201,15 +203,14 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setMessage('');
     try {
-      const urls = await renderAll();
-      const names = fileNames(urls.length);
+      const urls = await renderAll('jpeg');
+      const names = fileNames(urls.length, 'jpg');
       const files = urls.map((u, i) => dataUrlToFile(u, names[i]));
       const payload: ShareData = mode === 'message' ? { files, text: caption } : { files };
       if (typeof navigator.share === 'function' && navigator.canShare?.(payload)) {
         await navigator.share(payload);
       } else {
-        download(urls);
-        setMessage(urls.length > 1 ? 'Saved your story set as PNGs.' : 'Saved as PNG.');
+        setPreview(urls);
       }
     } catch (err) {
       if (!(err instanceof DOMException && err.name === 'AbortError')) setMessage('Could not create the image. Please try again.');
@@ -217,6 +218,22 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
       setBusy(false);
     }
   };
+
+  /** Renders the image and shows it full screen so it can be saved to Photos, then posted from Instagram. */
+  const instagramFlow = async () => {
+    setBusy(true);
+    setMessage('');
+    try {
+      setPreview(await renderAll('jpeg'));
+    } catch {
+      setMessage('Could not create the image. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const isIos = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const smsHref = `sms:${isIos ? '&' : '?'}body=${encodeURIComponent(caption)}`;
 
   const copyCaption = async () => {
     try {
@@ -359,6 +376,14 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
           <MessageCircle size={18} /> {card === 'trip' ? 'Invite a friend with trip details' : 'Send to a friend with a note'}
         </button>
         <div className="flex gap-2">
+          <button type="button" onClick={instagramFlow} disabled={busy || waitingOnAssets} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
+            <Send size={16} /> Instagram
+          </button>
+          <a href={smsHref} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
+            <MessageSquareText size={16} /> Text details
+          </a>
+        </div>
+        <div className="flex gap-2">
           <button type="button" onClick={copyCaption} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
             <ClipboardCopy size={16} /> Copy caption
           </button>
@@ -366,8 +391,33 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
             <Download size={16} /> {isSet ? 'Save 3 PNGs' : 'Save PNG'}
           </button>
         </div>
-        <p className="text-center text-[11px] text-white/50">Instagram: choose Share image, then Instagram, then Story or Post. Swipe the card for more styles.</p>
+        <p className="text-center text-[11px] text-white/50">Can&apos;t find Instagram or Messages in the share sheet? Use the Instagram and Text details buttons. Swipe the card for more styles.</p>
       </div>
+      {preview && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-navy text-white">
+          <div className="flex items-center justify-between px-4 py-2">
+            <h3 className="font-display text-xl font-bold uppercase tracking-wide">Post to Instagram</h3>
+            <button type="button" onClick={() => setPreview(null)} aria-label="Close" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10">
+              <X size={22} />
+            </button>
+          </div>
+          <ol className="mx-4 mb-3 space-y-1.5 rounded-xl bg-white/10 p-3 text-sm">
+            <li><b>1.</b> Press and hold the image below, then tap <b>Save to Photos</b> (or <b>Add to Photos</b>).</li>
+            <li><b>2.</b> Tap <b>Open Instagram</b>, then choose the new photo from your library for your Story.</li>
+          </ol>
+          <div className="scroll-y min-h-0 flex-1 space-y-3 px-4">
+            {preview.map((u, i) => (
+              <img key={i} src={u} alt={`Share image ${i + 1}`} className="mx-auto max-h-[56dvh] w-auto rounded-lg shadow-pop" style={{ WebkitTouchCallout: 'default', userSelect: 'auto' }} />
+            ))}
+          </div>
+          <div className="space-y-2 px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-3">
+            <a href="instagram://story-camera" className="btn-primary w-full">
+              <Send size={18} /> Open Instagram
+            </a>
+            <button type="button" onClick={() => setPreview(null)} className="btn-ghost w-full !border-white/30 !bg-transparent !text-white">Done</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
