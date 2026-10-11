@@ -1,15 +1,26 @@
 import { getPark } from './parks';
 import { formatLocalTime } from './planner/engine';
 import { formatDate } from './utils';
+import { PARKS } from './parks';
+import type { ParkEntry } from './types';
 import type { CardData, ShareCardId } from './shareTypes';
+
+/** A link whose preview image shows the user's passport. Visited parks are packed into a bitmask. */
+export function buildShareUrl(origin: string, entries: Record<string, ParkEntry | undefined>): string {
+  let mask = 0;
+  PARKS.forEach((p, i) => {
+    if (entries[p.id]?.status === 'visited') mask |= 1 << i;
+  });
+  const base = origin || 'https://ballpark-tracker.vercel.app';
+  return `${base}/s?v=${(mask >>> 0).toString(16)}`;
+}
 
 /**
  * Text that travels with a shared image. Instagram ignores or rejects text in the share sheet, so this is
  * offered separately: attached for messages, and copyable for posts.
  */
-export function buildCaption(card: ShareCardId, data: CardData, origin: string): string {
+export function buildCaption(card: ShareCardId, data: CardData, link: string): string {
   const { stats } = data;
-  const link = origin || 'ballpark-tracker.vercel.app';
 
   if (card === 'trip' && data.trip) {
     const it = data.trip.itinerary;

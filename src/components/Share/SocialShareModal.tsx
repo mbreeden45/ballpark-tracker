@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { toJpeg, toPng } from 'html-to-image';
-import { Camera, ChevronLeft, ChevronRight, ClipboardCopy, Download, ImagePlus, MessageCircle, MessageSquareText, RotateCcw, Send, Share2, X } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight, ClipboardCopy, Download, ImagePlus, Link2, MessageSquareText, RotateCcw, Share2, X } from 'lucide-react';
 import { PARKS, getPark } from '@/lib/parks';
 import { latestMilestone } from '@/lib/milestones';
-import { buildCaption } from '@/lib/shareCaption';
+import { buildCaption, buildShareUrl } from '@/lib/shareCaption';
 import { CARD_SIZE, type CardData, type ShareCardId, type ShareFormat, type ShareTheme } from '@/lib/shareTypes';
 import { useBallparkStore, useStats } from '@/store/useBallparkStore';
 import { useVenueSummary } from '@/hooks/useVenueMedia';
@@ -93,7 +93,6 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const [preview, setPreview] = useState<string[] | null>(null);
   const [host, setHost] = useState('');
   const [origin, setOrigin] = useState('');
 
@@ -192,25 +191,22 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
     });
   };
 
-  const caption = useMemo(() => buildCaption(card, data, origin), [card, data, origin]);
+  const shareUrl = useMemo(() => buildShareUrl(origin, entries), [origin, entries]);
+  const caption = useMemo(() => buildCaption(card, data, shareUrl), [card, data, shareUrl]);
 
-  /**
-   * image: share only the picture. Instagram and similar apps drop out of the iPhone share sheet when
-   * text or a link rides along.
-   * message: include the invite text so Messages, WhatsApp and Mail carry the details.
-   */
-  const share = async (mode: 'image' | 'message') => {
+  /** Shares only the picture: a strict JPEG file, no title, text or URL, so iOS treats it as a photo. */
+  const share = async () => {
     setBusy(true);
     setMessage('');
     try {
       const urls = await renderAll('jpeg');
       const names = fileNames(urls.length, 'jpg');
       const files = urls.map((u, i) => dataUrlToFile(u, names[i]));
-      const payload: ShareData = mode === 'message' ? { files, text: caption } : { files };
-      if (typeof navigator.share === 'function' && navigator.canShare?.(payload)) {
-        await navigator.share(payload);
+      if (typeof navigator.share === 'function' && navigator.canShare?.({ files })) {
+        await navigator.share({ files });
       } else {
-        setPreview(urls);
+        download(await renderAll());
+        setMessage('Saved as PNG.');
       }
     } catch (err) {
       if (!(err instanceof DOMException && err.name === 'AbortError')) setMessage('Could not create the image. Please try again.');
@@ -219,16 +215,18 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
     }
   };
 
-  /** Renders the image and shows it full screen so it can be saved to Photos, then posted from Instagram. */
-  const instagramFlow = async () => {
-    setBusy(true);
+  /** Shares a link. Text and URL shares always list Messages, and iMessage turns the link into a preview card. */
+  const shareLink = async () => {
     setMessage('');
     try {
-      setPreview(await renderAll('jpeg'));
-    } catch {
-      setMessage('Could not create the image. Please try again.');
-    } finally {
-      setBusy(false);
+      if (typeof navigator.share === 'function') {
+        await navigator.share({ title: 'My MLB Ballpark Passport', text: caption.replace(shareUrl, '').trim(), url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(caption);
+        setMessage('Caption and link copied.');
+      }
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) setMessage('Could not open the share sheet. Try Copy caption.');
     }
   };
 
@@ -369,18 +367,15 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
 
       <div className="mx-auto w-full max-w-sm shrink-0 space-y-2 px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-2">
         {message && <p className="text-center text-sm text-white/90" aria-live="polite">{message}</p>}
-        <button type="button" onClick={instagramFlow} disabled={busy || waitingOnAssets} className="btn-primary w-full">
-          <Send size={18} /> {busy ? 'Rendering…' : waitingOnAssets ? 'Preparing…' : 'Post to Instagram'}
-        </button>
-        <a href={smsHref} className="btn w-full bg-white text-navy hover:bg-navy-50">
+        <a href={smsHref} className="btn-primary w-full">
           <MessageSquareText size={18} /> {card === 'trip' ? 'Text a friend the trip details' : 'Text a friend'}
         </a>
         <div className="flex gap-2">
-          <button type="button" onClick={() => share('image')} disabled={busy || waitingOnAssets} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
-            <Share2 size={16} /> Share image
+          <button type="button" onClick={shareLink} className="btn flex-1 bg-white !px-2 text-navy hover:bg-navy-50">
+            <Link2 size={16} /> Share link
           </button>
-          <button type="button" onClick={() => share('message')} disabled={busy || waitingOnAssets} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
-            <MessageCircle size={16} /> Share with note
+          <button type="button" onClick={share} disabled={busy || waitingOnAssets} className="btn flex-1 bg-white !px-2 text-navy hover:bg-navy-50">
+            <Share2 size={16} /> {busy ? 'Rendering…' : waitingOnAssets ? 'Preparing…' : 'Share image'}
           </button>
         </div>
         <div className="flex gap-2">
@@ -391,47 +386,8 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
             <Download size={16} /> {isSet ? 'Save 3 PNGs' : 'Save PNG'}
           </button>
         </div>
-        <p className="text-center text-[11px] text-white/50">Post to Instagram saves the image to Photos, then opens Instagram. Swipe the card for more styles.</p>
+        <p className="text-center text-[11px] text-white/50">Texts and links show a preview card in Messages. Swipe the card for more styles.</p>
       </div>
-      {preview && (
-        <div className="fixed inset-0 z-[60] flex flex-col bg-navy text-white">
-          <div className="flex items-center justify-between px-4 py-2">
-            <h3 className="font-display text-xl font-bold uppercase tracking-wide">Post to Instagram</h3>
-            <button type="button" onClick={() => setPreview(null)} aria-label="Close" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10">
-              <X size={22} />
-            </button>
-          </div>
-          <ol className="mx-4 mb-3 space-y-1.5 rounded-xl bg-white/10 p-3 text-sm">
-            <li><b>1.</b> Tap <b>Save to Photos</b> below and choose <b>Save Image</b>. (Or press and hold the image.)</li>
-            <li><b>2.</b> Tap <b>Open Instagram</b>, then choose the new photo from your library for your Story.</li>
-          </ol>
-          <div className="scroll-y min-h-0 flex-1 space-y-3 px-4">
-            {preview.map((u, i) => (
-              <img key={i} src={u} alt={`Share image ${i + 1}`} className="mx-auto max-h-[56dvh] w-auto rounded-lg shadow-pop" style={{ WebkitTouchCallout: 'default', userSelect: 'auto' }} />
-            ))}
-          </div>
-          <div className="space-y-2 px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-3">
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  const files = preview.map((u, i) => dataUrlToFile(u, fileNames(preview.length, 'jpg')[i]));
-                  if (navigator.canShare?.({ files })) await navigator.share({ files });
-                } catch {
-                  /* cancelled */
-                }
-              }}
-              className="btn w-full bg-white text-navy hover:bg-navy-50"
-            >
-              <Download size={18} /> 1. Save to Photos (tap Save Image)
-            </button>
-            <a href="instagram://story-camera" className="btn-primary w-full">
-              <Send size={18} /> 2. Open Instagram
-            </a>
-            <button type="button" onClick={() => setPreview(null)} className="btn-ghost w-full !border-white/30 !bg-transparent !text-white">Done</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

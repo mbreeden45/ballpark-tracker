@@ -7,7 +7,10 @@ import { StoreHydrator } from '@/components/StoreHydrator';
 const display = Barlow_Condensed({ weight: ['500', '600', '700'], subsets: ['latin'], variable: '--font-display', display: 'swap' });
 const body = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
 
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'Ballpark Passport — Track and plan your MLB ballpark trips',
   description: 'Check off every MLB ballpark you have visited, rank them, and plan a realistic road trip around the schedule.',
 };
