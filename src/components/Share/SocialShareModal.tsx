@@ -369,19 +369,19 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
 
       <div className="mx-auto w-full max-w-sm shrink-0 space-y-2 px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-2">
         {message && <p className="text-center text-sm text-white/90" aria-live="polite">{message}</p>}
-        <button type="button" onClick={() => share('image')} disabled={busy || waitingOnAssets} className="btn-primary w-full">
-          <Share2 size={18} /> {busy ? 'Rendering…' : waitingOnAssets ? 'Preparing…' : isSet ? 'Share 3 slides (Instagram & more)' : 'Share image (Instagram & more)'}
+        <button type="button" onClick={instagramFlow} disabled={busy || waitingOnAssets} className="btn-primary w-full">
+          <Send size={18} /> {busy ? 'Rendering…' : waitingOnAssets ? 'Preparing…' : 'Post to Instagram'}
         </button>
-        <button type="button" onClick={() => share('message')} disabled={busy || waitingOnAssets} className="btn w-full bg-white text-navy hover:bg-navy-50">
-          <MessageCircle size={18} /> {card === 'trip' ? 'Invite a friend with trip details' : 'Send to a friend with a note'}
-        </button>
+        <a href={smsHref} className="btn w-full bg-white text-navy hover:bg-navy-50">
+          <MessageSquareText size={18} /> {card === 'trip' ? 'Text a friend the trip details' : 'Text a friend'}
+        </a>
         <div className="flex gap-2">
-          <button type="button" onClick={instagramFlow} disabled={busy || waitingOnAssets} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
-            <Send size={16} /> Instagram
+          <button type="button" onClick={() => share('image')} disabled={busy || waitingOnAssets} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
+            <Share2 size={16} /> Share image
           </button>
-          <a href={smsHref} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
-            <MessageSquareText size={16} /> Text details
-          </a>
+          <button type="button" onClick={() => share('message')} disabled={busy || waitingOnAssets} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
+            <MessageCircle size={16} /> Share with note
+          </button>
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={copyCaption} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
@@ -391,7 +391,7 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
             <Download size={16} /> {isSet ? 'Save 3 PNGs' : 'Save PNG'}
           </button>
         </div>
-        <p className="text-center text-[11px] text-white/50">Can&apos;t find Instagram or Messages in the share sheet? Use the Instagram and Text details buttons. Swipe the card for more styles.</p>
+        <p className="text-center text-[11px] text-white/50">Post to Instagram saves the image to Photos, then opens Instagram. Swipe the card for more styles.</p>
       </div>
       {preview && (
         <div className="fixed inset-0 z-[60] flex flex-col bg-navy text-white">
@@ -402,7 +402,7 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
             </button>
           </div>
           <ol className="mx-4 mb-3 space-y-1.5 rounded-xl bg-white/10 p-3 text-sm">
-            <li><b>1.</b> Press and hold the image below, then tap <b>Save to Photos</b> (or <b>Add to Photos</b>).</li>
+            <li><b>1.</b> Tap <b>Save to Photos</b> below and choose <b>Save Image</b>. (Or press and hold the image.)</li>
             <li><b>2.</b> Tap <b>Open Instagram</b>, then choose the new photo from your library for your Story.</li>
           </ol>
           <div className="scroll-y min-h-0 flex-1 space-y-3 px-4">
@@ -411,8 +411,22 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
             ))}
           </div>
           <div className="space-y-2 px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-3">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const files = preview.map((u, i) => dataUrlToFile(u, fileNames(preview.length, 'jpg')[i]));
+                  if (navigator.canShare?.({ files })) await navigator.share({ files });
+                } catch {
+                  /* cancelled */
+                }
+              }}
+              className="btn w-full bg-white text-navy hover:bg-navy-50"
+            >
+              <Download size={18} /> 1. Save to Photos (tap Save Image)
+            </button>
             <a href="instagram://story-camera" className="btn-primary w-full">
-              <Send size={18} /> Open Instagram
+              <Send size={18} /> 2. Open Instagram
             </a>
             <button type="button" onClick={() => setPreview(null)} className="btn-ghost w-full !border-white/30 !bg-transparent !text-white">Done</button>
           </div>
