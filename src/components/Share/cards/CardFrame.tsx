@@ -67,7 +67,7 @@ export const CardFrame = forwardRef<HTMLDivElement, Props>(function CardFrame(
           }}
         >
           <span style={{ fontFamily: F.display, fontSize: story ? 13 : 12, letterSpacing: '0.1em', color: t.fg }}>Ballpark Passport</span>
-          <span style={{ textTransform: 'none', letterSpacing: '0.02em' }}>{host}</span>
+          <span style={{ textTransform: 'none', letterSpacing: '0.02em' }}>Make yours: {host}</span>
         </div>
       )}
     </div>

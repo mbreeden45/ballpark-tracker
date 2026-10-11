@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import { Camera, ChevronLeft, ChevronRight, Download, ImagePlus, RotateCcw, Share2, X } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight, ClipboardCopy, Download, ImagePlus, MessageCircle, RotateCcw, Share2, X } from 'lucide-react';
 import { PARKS, getPark } from '@/lib/parks';
 import { latestMilestone } from '@/lib/milestones';
+import { buildCaption } from '@/lib/shareCaption';
 import { CARD_SIZE, type CardData, type ShareCardId, type ShareFormat, type ShareTheme } from '@/lib/shareTypes';
 import { useBallparkStore, useStats } from '@/store/useBallparkStore';
 import { useVenueSummary } from '@/hooks/useVenueMedia';
@@ -189,15 +190,22 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
     });
   };
 
-  const share = async () => {
+  const caption = useMemo(() => buildCaption(card, data, origin), [card, data, origin]);
+
+  /**
+   * image: share only the picture. Instagram and similar apps drop out of the iPhone share sheet when
+   * text or a link rides along.
+   * message: include the invite text so Messages, WhatsApp and Mail carry the details.
+   */
+  const share = async (mode: 'image' | 'message') => {
     setBusy(true);
     setMessage('');
     try {
       const urls = await renderAll();
       const names = fileNames(urls.length);
       const files = urls.map((u, i) => dataUrlToFile(u, names[i]));
-      const payload = { files, title: 'My Ballpark Passport', text: `${stats.visited}/30 MLB ballparks. Build yours:`, url: origin };
-      if (typeof navigator.share === 'function' && navigator.canShare?.({ files })) {
+      const payload: ShareData = mode === 'message' ? { files, text: caption } : { files };
+      if (typeof navigator.share === 'function' && navigator.canShare?.(payload)) {
         await navigator.share(payload);
       } else {
         download(urls);
@@ -207,6 +215,15 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
       if (!(err instanceof DOMException && err.name === 'AbortError')) setMessage('Could not create the image. Please try again.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const copyCaption = async () => {
+    try {
+      await navigator.clipboard.writeText(caption);
+      setMessage('Caption copied. Paste it into your post or message.');
+    } catch {
+      setMessage('Could not copy automatically. Long-press to copy: ' + caption);
     }
   };
 
@@ -335,13 +352,21 @@ function ShareStudio({ onClose }: { onClose: () => void }) {
 
       <div className="mx-auto w-full max-w-sm shrink-0 space-y-2 px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-2">
         {message && <p className="text-center text-sm text-white/90" aria-live="polite">{message}</p>}
-        <p className="text-center text-[11px] text-white/50">Swipe for more styles</p>
-        <button type="button" onClick={share} disabled={busy || waitingOnAssets} className="btn-primary w-full">
-          <Share2 size={18} /> {busy ? 'Rendering…' : waitingOnAssets ? 'Preparing…' : isSet ? 'Share 3 slides' : 'Share'}
+        <button type="button" onClick={() => share('image')} disabled={busy || waitingOnAssets} className="btn-primary w-full">
+          <Share2 size={18} /> {busy ? 'Rendering…' : waitingOnAssets ? 'Preparing…' : isSet ? 'Share 3 slides (Instagram & more)' : 'Share image (Instagram & more)'}
         </button>
-        <button type="button" onClick={save} disabled={busy || waitingOnAssets} className="btn-ghost w-full !border-white/30 !bg-transparent !text-white">
-          <Download size={18} /> {isSet ? 'Save 3 PNGs' : 'Save PNG'}
+        <button type="button" onClick={() => share('message')} disabled={busy || waitingOnAssets} className="btn w-full bg-white text-navy hover:bg-navy-50">
+          <MessageCircle size={18} /> {card === 'trip' ? 'Invite a friend with trip details' : 'Send to a friend with a note'}
         </button>
+        <div className="flex gap-2">
+          <button type="button" onClick={copyCaption} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
+            <ClipboardCopy size={16} /> Copy caption
+          </button>
+          <button type="button" onClick={save} disabled={busy || waitingOnAssets} className="btn-ghost flex-1 !border-white/30 !bg-transparent !px-2 !text-white">
+            <Download size={16} /> {isSet ? 'Save 3 PNGs' : 'Save PNG'}
+          </button>
+        </div>
+        <p className="text-center text-[11px] text-white/50">Instagram: choose Share image, then Instagram, then Story or Post. Swipe the card for more styles.</p>
       </div>
     </div>
   );

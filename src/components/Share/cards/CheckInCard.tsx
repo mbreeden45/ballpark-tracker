@@ -16,8 +16,7 @@ export const CheckInCard = forwardRef<HTMLDivElement, Props>(function CheckInCar
   const story = format === 'story';
   const park = data.parkId ? getPark(data.parkId) : undefined;
   const entry = park ? data.entries[park.id] : undefined;
-  const isLatest = park && data.lastVisitedId === park.id;
-  const eyebrow = isLatest ? `PARK #${data.stats.visited} OF 30` : `ONE OF ${data.stats.visited} PARKS VISITED`;
+  const eyebrow = `${data.stats.visited} OF 30 MLB BALLPARKS VISITED`;
   const details = [entry?.visit.dateVisited ? formatDate(entry.visit.dateVisited) : '', entry?.visit.finalScore].filter(Boolean).join('  ·  ');
 
   const bg = park ? `linear-gradient(155deg, ${park.primaryColor}, ${park.secondaryColor})` : 'linear-gradient(180deg, #0B2D5E, #041E42)';
@@ -39,7 +38,7 @@ export const CheckInCard = forwardRef<HTMLDivElement, Props>(function CheckInCar
     >
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <span style={{ background: '#fff', color: '#041E42', borderRadius: 999, padding: '5px 12px', fontSize: 11, fontWeight: 800, letterSpacing: '0.1em' }}>{eyebrow}</span>
-        <span style={{ width: 34, height: 34, borderRadius: 999, background: '#12805C', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px #fff' }}>
+        <span style={{ width: 38, height: 38, flexShrink: 0, borderRadius: 999, background: '#12805C', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid #fff', boxSizing: 'border-box' }}>
           <Check size={20} strokeWidth={3.5} color="#fff" />
         </span>
       </div>
